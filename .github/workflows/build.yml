@@ -17,42 +17,10 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: 16
-      - name: Import gradle properties
-        shell: bash
-        run: cat gradle.properties >> $GITHUB_ENV
-      - name: Build
-        run: ./gradlew build modrinth --stacktrace
-        env:
-          MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}
-          COMMIT_MESSAGE: ${{ join(github.event.commits.*.message, '<br>') }}
-      - name: Generate Javadoc
-        run: ./gradlew javadoc
-      - name: Deploy Javadoc
-        uses: JamesIves/github-pages-deploy-action@v4
+      - name: build
+        run: ./gradlew build
+      - name: capture build artifacts
+        uses: actions/upload-artifact@v4
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          branch: javadoc
-          clean: true
-          folder: core/build/docs/javadoc
-          target-folder: ./
-      - name: Notify Discord
-        uses: BillyGalbreath/actions-status-discord@main
-        if: success()
-        with:
-          webhook: ${{ secrets.DISCORD_WEBHOOK }}
-          noprefix: true
-          title: New build of Pl3xMap is ready!
-          description: |
-            Version ${{ env.minecraftVersion }} build ${{ github.run_number }}
-            Click [here](https://modrinth.com/mod/pl3xmap/version/${{ env.minecraftVersion }}-${{ github.run_number }}) to download!
-      - name: Notify Discord
-        uses: BillyGalbreath/actions-status-discord@main
-        if: ${{ failure() }}
-        with:
-          webhook: ${{ secrets.DISCORD_WEBHOOK }}
-          noprefix: true
-          title: Build Failure!
-          color: 0xff0000
-          description: |
-            Version ${{ env.minecraftVersion }} build ${{ github.run_number }}
-            Click [here](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}) to view the run!
+          name: Artifacts
+          path: build/libs/
